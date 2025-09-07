@@ -1,5 +1,7 @@
 using DocTask.Core.DTOs.ApiResponses;
+using DocTask.Core.Dtos.Tasks;
 using DocTask.Core.Interfaces.Services;
+using DocTask.Core.Paginations;
 using Microsoft.AspNetCore.Mvc;
 using TaskModel = DocTask.Core.Models.Task;
 
@@ -17,13 +19,13 @@ public class TaskController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] PageOptionsRequest pageOptions)
     {
-        List<TaskModel> tasks = await _taskService.GetAllAsync();
-        return Ok(new ApiResponse<List<TaskModel>>
+        var tasks = await _taskService.GetAll(pageOptions);
+        return Ok(new ApiResponse<PaginatedList<TaskDto>>
         {
             Data = tasks,
-            Message = "All tasks were retrieved successfully",
+            Message = "Get All Tasks Successfully",
         });
     }
 }

@@ -1,6 +1,7 @@
 using DocTask.Core.Interfaces.Repositories;
+using DocTask.Core.Paginations;
 using Microsoft.EntityFrameworkCore;
-using Task = DocTask.Core.Models.Task;
+using TaskModel = DocTask.Core.Models.Task;
 
 namespace DocTask.Data.Repositories;
 
@@ -13,8 +14,9 @@ public class TaskRepository : ITaskRepository
         _context = context;
     }
 
-    public async Task<List<Task>> GetAllAsync()
+    public async Task<PaginatedList<TaskModel>> GetAllAsync(PageOptionsRequest pageOptions)
     {
-        return await _context.Tasks.ToListAsync();
+        var query = _context.Tasks.Where(t => t.ParentTaskId == null).AsQueryable();
+        return await query.ToPaginatedListAsync(pageOptions);
     }
 }
