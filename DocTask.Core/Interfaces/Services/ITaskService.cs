@@ -1,10 +1,21 @@
 using DocTask.Core.Dtos.Tasks;
-using DocTask.Core.Paginations;
-using TaskModel = DocTask.Core.Models.Task;
+using Task = DocTask.Core.Models.Task;
 
 namespace DocTask.Core.Interfaces.Services;
 
 public interface ITaskService
 {
-    Task<PaginatedList<TaskDto>> GetAll(PageOptionsRequest pageOptions);
+    Task<List<TaskDto>> GetAllTasks();
+    Task<TaskDto?> GetTaskById(int id);
+    Task<TaskDto> CreateTask(CreateMainTaskRequest request);
+    Task<TaskDto> CreateTaskWithDetails(CreateTaskRequest request);
+    Task<TaskDto?> UpdateTask(int id, UpdateTaskRequest request);
+    Task<bool> DeleteTask(int id);
+    
+    // Subtask methods
+    Task<List<TaskDto>> GetSubtasksByParentId(int parentTaskId);
+    Task<TaskDto?> GetSubtaskById(int parentTaskId, int subtaskId);
+    Task<TaskDto> CreateSubtask(int parentTaskId, CreateSubtaskRequest request);
+    Task<TaskDto?> UpdateSubtask(int parentTaskId, int subtaskId, UpdateTaskRequest request);
+    Task<bool> DeleteSubtask(int parentTaskId, int subtaskId);
 }

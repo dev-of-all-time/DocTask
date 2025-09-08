@@ -11,6 +11,10 @@ public static class ApplicationContainer
     {
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<ITaskRepository, TaskRepository>();
+        services.AddScoped<IUploadFileService, UploadFileService>();
+        services.AddScoped<IUploadFileRepository, UploadFileRepository>();
+        services.AddScoped<IProgressService, ProgressService>();
+        services.AddScoped<IProgressRepository, ProgressRepository>();
         return services;
     }
     
