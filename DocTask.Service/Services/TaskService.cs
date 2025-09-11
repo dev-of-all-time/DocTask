@@ -34,9 +34,9 @@ public class TaskService : ITaskService
     public Task<TaskModel> AddSubtaskAsync(int parentTaskId, TaskDto subtaskDto)
         => _taskRepository.AddSubtaskAsync(parentTaskId, subtaskDto);
 
-    public Task<TaskModel> CreateTaskAsync(TaskDto taskdto)
+    public async Task<TaskModel?> CreateTaskAsync(TaskDto taskdto)
     {
-        return _taskRepository.CreateTaskAsync(taskdto);
+        return await _taskRepository.CreateTaskAsync(taskdto);
     }
 
     public Task<TaskModel?> UpdateTaskAsync(int taskId, TaskDto taskDto)
@@ -62,5 +62,25 @@ public class TaskService : ITaskService
         _taskRepository.DeleteTask(task);
         await _taskRepository.SaveChangesAsync();
         return (true, null);
+    }
+
+    public async Task<PaginatedList<TaskDto>> GetTasksByAssignerId(int assignerId, PageOptionsRequest pageOptions)
+    {
+        var paginatedListModel = await _taskRepository.GetTasksByAssignerId(assignerId, pageOptions);
+        return new PaginatedList<TaskDto>
+        {
+            MetaData = paginatedListModel.MetaData,
+            Items = paginatedListModel.Items.Select(t => t.ToTaskDto()).ToList(),
+        };
+    }
+
+    public async Task<PaginatedList<TaskDto>> GetTasksByAssigneeId(int assigneeId, PageOptionsRequest pageOptions)
+    {
+        var paginatedListModel = await _taskRepository.GetTasksByAssigneeId(assigneeId, pageOptions);
+        return new PaginatedList<TaskDto>
+        {
+            MetaData = paginatedListModel.MetaData,
+            Items = paginatedListModel.Items.Select(t => t.ToTaskDto()).ToList(),
+        };
     }
 }
