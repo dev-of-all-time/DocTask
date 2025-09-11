@@ -30,8 +30,8 @@ public class GlobalExceptionHandler : IExceptionHandler
         var result = new ApiResponse<object>
         {
             Success = false,
-            Message = exception.Message,
-            Error = exception.GetType().ToString(),
+            Message = null,
+            Error = exception.Message,
         };
         await httpContext.Response.WriteAsJsonAsync(result, cancellationToken);
         return true;
