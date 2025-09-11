@@ -10,4 +10,9 @@
       <ProjectReference Include="..\DocTask.Core\DocTask.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="BCrypt.Net-Next" Version="4.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
+    </ItemGroup>
+
 </Project>
