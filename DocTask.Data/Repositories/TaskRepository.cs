@@ -103,7 +103,10 @@ public class TaskRepository : ITaskRepository
       Percentagecomplete = taskDto.Percentagecomplete ?? 0,
       ParentTaskId = taskDto.ParentTaskId
     };
-    return await Task.FromResult(newTask);
+    _context.Tasks.Add(newTask);
+    await _context.SaveChangesAsync(); // <- quan trọng, EF Core mới gán TaskId từ DB
+
+    return newTask; // bây giờ TaskId, Description, các trường khác đã có giá trị thực
   }
 
   public async Task<TaskModel?> UpdateTaskAsync(int taskId, TaskDto taskDto)
