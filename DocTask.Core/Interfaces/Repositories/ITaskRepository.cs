@@ -20,4 +20,8 @@ public interface ITaskRepository
     Task<TaskModel?> GetSubtaskByIdAsync(int parentTaskId, int taskId);
     void DeleteTask(TaskModel task);
     Task SaveChangesAsync();
+
+    //assigner & assignee
+    Task<PaginatedList<TaskModel>> GetTasksByAssignerId(int assignerId, PageOptionsRequest pageOptions);
+    Task<PaginatedList<TaskModel>> GetTasksByAssigneeId(int assigneeId, PageOptionsRequest pageOptions);
 }

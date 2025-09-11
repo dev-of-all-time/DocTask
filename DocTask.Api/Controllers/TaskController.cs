@@ -5,6 +5,7 @@ using DocTask.Core.Paginations;
 using Microsoft.AspNetCore.Mvc;
 using TaskModel = DocTask.Core.Models.Task;
 
+
 namespace DocTask.Api.Controllers;
 
 [ApiController]
@@ -131,5 +132,28 @@ public class TaskController : ControllerBase
             return BadRequest(new { message });
 
         return NoContent();
+    }
+
+    // Assigner & Assignee
+    [HttpGet("assigner/{assignerId}")]
+    public async Task<IActionResult> GetTasksByAssignerId(int assignerId, [FromQuery] PageOptionsRequest pageOptions)
+    {
+        var tasks = await _taskService.GetTasksByAssignerId(assignerId, pageOptions);
+        return Ok(new ApiResponse<PaginatedList<TaskDto>>
+        {
+            Data = tasks,
+            Message = "Get tasks by assigner ID successfully",
+        });
+    }
+    
+    [HttpGet("assignee/{assigneeId}")]
+    public async Task<IActionResult> GetTasksByAssigneeId(int assigneeId, [FromQuery] PageOptionsRequest pageOptions)
+    {
+        var tasks = await _taskService.GetTasksByAssigneeId(assigneeId, pageOptions);
+        return Ok(new ApiResponse<PaginatedList<TaskDto>>
+        {
+            Data = tasks,
+            Message = "Get tasks by assignee ID successfully",
+        });
     }
 }

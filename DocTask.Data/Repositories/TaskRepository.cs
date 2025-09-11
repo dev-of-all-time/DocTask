@@ -183,4 +183,23 @@ public class TaskRepository : ITaskRepository
   {
     await _context.SaveChangesAsync();
   }
+
+  //assigner & assignee
+  public async Task<PaginatedList<TaskModel>> GetTasksByAssignerId(int assignerId, PageOptionsRequest pageOptions)
+  {
+    var query = _context.Tasks
+        .Where(t => t.AssignerId == assignerId)
+        .Include(t => t.Assignee)
+        .AsQueryable();
+    return await query.ToPaginatedListAsync(pageOptions);
+  }
+
+  public async Task<PaginatedList<TaskModel>> GetTasksByAssigneeId(int assigneeId, PageOptionsRequest pageOptions)
+  {
+    var query = _context.Tasks
+        .Where(t => t.AssigneeId == assigneeId)
+        .Include(t => t.Assignee)
+        .AsQueryable();
+    return await query.ToPaginatedListAsync(pageOptions);
+  }
 }

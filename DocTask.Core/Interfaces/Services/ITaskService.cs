@@ -16,4 +16,8 @@ public interface ITaskService
     //subtasks
     Task<PaginatedList<TaskDto>> GetSubtasksAsync(int parentTaskId, PageOptionsRequest pageOptions, string? search = null);
     Task<TaskModel> AddSubtaskAsync(int parentTaskId, TaskDto subtaskDto);
+
+    //assigner & assignee
+    Task<PaginatedList<TaskDto>> GetTasksByAssignerId(int assignerId, PageOptionsRequest pageOptions);
+    Task<PaginatedList<TaskDto>> GetTasksByAssigneeId(int assigneeId, PageOptionsRequest pageOptions);
 }
