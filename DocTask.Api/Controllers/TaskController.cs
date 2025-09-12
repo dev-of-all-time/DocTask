@@ -4,6 +4,10 @@ using DocTask.Core.Interfaces.Services;
 using DocTask.Core.Paginations;
 using Microsoft.AspNetCore.Mvc;
 using TaskModel = DocTask.Core.Models.Task;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using DocTask.Data;
+using DocTask.Core.Exceptions;
 
 
 namespace DocTask.Api.Controllers;
@@ -13,10 +17,12 @@ namespace DocTask.Api.Controllers;
 public class TaskController : ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly ApplicationDbContext _dbContext;
 
-    public TaskController(ITaskService taskService)
+    public TaskController(ITaskService taskService, ApplicationDbContext dbContext)
     {
         _taskService = taskService;
+        _dbContext = dbContext;
     }
 
     // GET: api/tasks
@@ -145,15 +151,48 @@ public class TaskController : ControllerBase
             Message = "Get tasks by assigner ID successfully",
         });
     }
-    
-    [HttpGet("assignee/{assigneeId}")]
-    public async Task<IActionResult> GetTasksByAssigneeId(int assigneeId, [FromQuery] PageOptionsRequest pageOptions)
+
+    [HttpGet("assigneeid")] 
+    public async Task<IActionResult> GetMyTasks()
     {
-        var tasks = await _taskService.GetTasksByAssigneeId(assigneeId, pageOptions);
-        return Ok(new ApiResponse<PaginatedList<TaskDto>>
+        var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new ApiResponse<string> { Success = false, Error = "Không thể xác thực người dùng." });
+        }
+
+        var userId = await _dbContext.Users
+            .Where(u => u.Username == username)
+            .Select(u => u.UserId)
+            .FirstOrDefaultAsync();
+
+        if (userId == 0)
+        {
+            throw new NotFoundException("Người dùng không tồn tại.");
+        }
+
+        var tasks = await _dbContext.Tasks
+            .AsNoTracking()
+            .Where(t => t.Users.Any(u => u.UserId == userId))
+            .Select(t => new TaskDto
+            {
+                TaskId = t.TaskId,
+                Title = t.Title,
+                Description = t.Description,
+                AssignerId = t.AssignerId,
+                AssigneeId = t.AssigneeId,
+                Status = t.Status,
+                StartDate = t.StartDate,
+                DueDate = t.DueDate,
+                Percentagecomplete = t.Percentagecomplete,
+                ParentTaskId = t.ParentTaskId,
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<List<TaskDto>>
         {
             Data = tasks,
-            Message = "Get tasks by assignee ID successfully",
+            Message = "Lấy danh sách công việc theo người dùng thành công."
         });
     }
 }
