@@ -18,7 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => {
 
 });
 builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("Jwt"));
-builder.Services.AddControllers();
+builder.Services.AddControllerConfiguration();
 
 // Authorization (tích hợp role-based)
 builder.Services.AddAuthentication("JwtAuth")  // Set default scheme
@@ -71,18 +71,7 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 }
 
 var app = builder.Build();
-//debug test
-// using (var scope = app.Services.CreateScope())
-// {
-//     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-//     var task32 = await context.Tasks.FirstOrDefaultAsync(t => t.TaskId == 32);
-//     if (task32 != null)
-//         Console.WriteLine($"Found task 32: {task32.Title}");
-//     else
-//         Console.WriteLine("Task 32 not found");
-// }
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

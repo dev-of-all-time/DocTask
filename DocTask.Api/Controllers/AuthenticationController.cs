@@ -1,6 +1,8 @@
 using DocTask.Core.DTOs.ApiResponses;
 using DocTask.Core.Dtos.Authentications;
+using DocTask.Core.Exceptions;
 using DocTask.Core.Interfaces.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocTask.Api.Controllers;
@@ -19,9 +21,6 @@ public class AuthenticationController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-            
         var result = await _authenticationService.Login(request);
         return Ok(new ApiResponse<LoginResponseDto>
         {
