@@ -13,11 +13,6 @@ public interface ITaskRepository
     Task<TaskModel?> UpdateTaskAsync(int taskId, TaskDto taskDto);
     Task<bool> DeleteTaskAsync(int taskId);
     Task<int> CountSubtasksAsync(int parentTaskId, string? search = null);
-
-    // subtasks
-    Task<PaginatedList<TaskDto>> GetSubtasksAsync(int parentTaskId, PageOptionsRequest pageOptions, string? search = null);
-    Task<TaskModel> AddSubtaskAsync(int parentTaskId, TaskDto subtaskDto);
-    Task<TaskModel?> GetSubtaskByIdAsync(int parentTaskId, int taskId);
     void DeleteTask(TaskModel task);
     Task SaveChangesAsync();
 }

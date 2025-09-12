@@ -1,38 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace DocTask.Core.Dtos.Tasks;
 
 public class TaskDto
 {
-    public int TaskId { get; set; }
+  [Required(ErrorMessage = "Tiêu đề là bắt buộc.")]
+  public string Title { get; set; } = null!;
 
-    public string Title { get; set; } = null!;
+  [Required(ErrorMessage = "Mô tả là bắt buộc.")]
+  public string Description { get; set; }
 
-    public string? Description { get; set; }
+  public DateOnly? StartDate { get; set; }
 
-    public int? AssignerId { get; set; }
-
-    public int? AssigneeId { get; set; }
-
-    public int? OrgId { get; set; }
-
-    public int? PeriodId { get; set; }
-
-    public int? AttachedFile { get; set; }
-
-    public string? Status { get; set; }
-
-    public string? Priority { get; set; }
-
-    public DateOnly? StartDate { get; set; }
-
-    public DateOnly? DueDate { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public int? UnitId { get; set; }
-
-    public int? FrequencyId { get; set; }
-
-    public int? Percentagecomplete { get; set; }
-
-    public int? ParentTaskId { get; set; }
+  public DateOnly? DueDate { get; set; }
 }

@@ -8,12 +8,9 @@ public interface ITaskService
 {
     // tasks
     Task<PaginatedList<TaskDto>> GetAll(PageOptionsRequest pageOptions);
-    Task<TaskModel?> GetTaskByIdAsync(int taskId);
     Task<TaskModel?> CreateTaskAsync(TaskDto taskDto);
     Task<TaskModel?> UpdateTaskAsync(int taskId, TaskDto taskDto);
-    Task<(bool Success, string? Message)> DeleteTaskAsync(int taskId);
+    Task DeleteTaskAsync(int taskId);
 
-    //subtasks
-    Task<PaginatedList<TaskDto>> GetSubtasksAsync(int parentTaskId, PageOptionsRequest pageOptions, string? search = null);
-    Task<TaskModel> AddSubtaskAsync(int parentTaskId, TaskDto subtaskDto);
+
 }

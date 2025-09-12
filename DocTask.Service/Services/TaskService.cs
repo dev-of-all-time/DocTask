@@ -1,10 +1,10 @@
 using DocTask.Core.Dtos.Tasks;
+using DocTask.Core.Exceptions;
 using DocTask.Core.Interfaces.Repositories;
 using DocTask.Core.Interfaces.Services;
 using DocTask.Core.Paginations;
 using DocTask.Service.Mappers;
 using TaskModel = DocTask.Core.Models.Task;
-
 
 namespace DocTask.Service.Services;
 
@@ -20,47 +20,76 @@ public class TaskService : ITaskService
     public async Task<PaginatedList<TaskDto>> GetAll(PageOptionsRequest pageOptions)
     {
         var paginatedListModel = await _taskRepository.GetAllAsync(pageOptions);
+
+        if (paginatedListModel == null || !paginatedListModel.Items.Any())
+        {
+            throw new NotFoundException("Không tìm thấy task nào.");
+        }
+
         return new PaginatedList<TaskDto>
         {
             MetaData = paginatedListModel.MetaData,
             Items = paginatedListModel.Items.Select(t => t.ToTaskDto()).ToList(),
         };
     }
-    
-    public Task<TaskModel?> GetTaskByIdAsync(int taskId) => _taskRepository.GetTaskByIdAsync(taskId);
-    public Task<PaginatedList<TaskDto>> GetSubtasksAsync(int parentTaskId, PageOptionsRequest pageOptions, string? search = null)
-        => _taskRepository.GetSubtasksAsync(parentTaskId, pageOptions, search);
 
-    public Task<TaskModel> AddSubtaskAsync(int parentTaskId, TaskDto subtaskDto)
-        => _taskRepository.AddSubtaskAsync(parentTaskId, subtaskDto);
-
-    public Task<TaskModel> CreateTaskAsync(TaskDto taskdto)
+    public async Task<TaskModel> CreateTaskAsync(TaskDto taskDto)
     {
-        return _taskRepository.CreateTaskAsync(taskdto);
+        if (string.IsNullOrWhiteSpace(taskDto.Title))
+        {
+            throw new BadRequestException("Task title không được để trống.");
+        }
+        if (string.IsNullOrWhiteSpace(taskDto.Description))
+        {
+            throw new BadRequestException("Mô tả không được để trống.");
+        }
+
+        var created = await _taskRepository.CreateTaskAsync(taskDto);
+
+        if (created == null)
+        {
+            throw new InternalServerErrorException("Không thể tạo task.");
+        }
+
+        return created;
     }
 
-    public Task<TaskModel?> UpdateTaskAsync(int taskId, TaskDto taskDto)
+    public async Task<TaskModel> UpdateTaskAsync(int taskId, TaskDto taskDto)
     {
-        return _taskRepository.UpdateTaskAsync(taskId, taskDto);
+        var existingTask = await _taskRepository.GetTaskByIdAsync(taskId);
+        if (existingTask == null)
+        {
+            throw new NotFoundException($"Không tìm thấy task với ID {taskId}.");
+        }
+
+        var updated = await _taskRepository.UpdateTaskAsync(taskId, taskDto);
+        if (updated == null)
+        {
+            throw new InternalServerErrorException("Cập nhật task thất bại.");
+        }
+
+        return updated;
     }
 
-    public async Task<(bool Success, string? Message)> DeleteTaskAsync(int taskId)
+    public async Task DeleteTaskAsync(int taskId)
     {
         var task = await _taskRepository.GetTaskByIdAsync(taskId);
         if (task == null)
-            return (false, "Không tìm thấy task.");
+        {
+            throw new NotFoundException($"Không tìm thấy task với ID {taskId}.");
+        }
 
         // Nếu là task cha
         if (task.ParentTaskId == null)
         {
             var subtaskCount = await _taskRepository.CountSubtasksAsync(task.TaskId);
             if (subtaskCount > 0)
-                return (false, "Không thể xóa task cha vì còn task con. Xóa tất cả task con trước.");
+            {
+                throw new ConflictException("Không thể xóa task cha vì còn task con. Xóa tất cả task con trước.");
+            }
         }
 
-        // Xóa task (task con hoặc task cha không còn con)
         _taskRepository.DeleteTask(task);
         await _taskRepository.SaveChangesAsync();
-        return (true, null);
     }
 }
