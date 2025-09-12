@@ -78,18 +78,8 @@ public class TaskController : ControllerBase
         return Ok(new ApiResponse<PaginatedList<TaskDto>>
         {
             Data = tasks,
-            Message = "Get tasks by assigner ID successfully",
+            Message = "Lấy danh sách task theo người giao thành công",
         });
     }
 
-    [HttpGet("assignee/{assigneeId}")]
-    public async Task<IActionResult> GetTasksByAssigneeId(int assigneeId, [FromQuery] PageOptionsRequest pageOptions)
-    {
-        var tasks = await _taskService.GetTasksByAssigneeId(assigneeId, pageOptions);
-        return Ok(new ApiResponse<PaginatedList<TaskDto>>
-        {
-            Data = tasks,
-            Message = "Get tasks by assignee ID successfully",
-        });
-    }
 }
