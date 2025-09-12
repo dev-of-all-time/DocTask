@@ -7,6 +7,7 @@ using DocTask.Core.Interfaces.Repositories;
 using DocTask.Core.Interfaces.Services;
 using DocTask.Core.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace DocTask.Service.Services
 {
@@ -31,14 +32,19 @@ namespace DocTask.Service.Services
             }
         }
 
-        public async Task<UploadFileDto> UploadFileAsync(UploadFileRequest request, int userId)
+        public async Task<UploadFileDto> UploadFileAsync(UploadFileRequest request, int? userId)
         {
+            if (userId == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} does not exist.");
+            }
+
             if (request.File == null || request.File.Length == 0)
             {
                 throw new ArgumentException("No file provided");
             }
 
-            const long maxFileSize = 10 * 1024 * 1024; // 10 MB
+            const long maxFileSize = 3 * 1024 * 1024; // 3 MB
             if (request.File.Length > maxFileSize)
             {
                 throw new ArgumentException($"File size exceeds the maximum limit of {maxFileSize / (1024 * 1024)} MB");
@@ -91,6 +97,98 @@ namespace DocTask.Service.Services
                 FileSize = request.File.Length,
                 ContentType = request.File.ContentType,
             };
+        }
+
+        public async Task<UploadFileDto?> GetFileByIdAsync(int fileId)
+        {
+            var file = await _uploadFileRepository.GetByIdAsync(fileId);
+            if (file == null)
+            {
+                throw new KeyNotFoundException($"File with ID {fileId} does not exist.");
+            }
+
+            var fileInfo = new FileInfo(file.FilePath);
+
+            return new UploadFileDto
+            {
+                FileId = file.FileId,
+                FileName = file.FileName,
+                FilePath = file.FilePath,
+                UploadedBy = file.UploadedBy,
+                UploadedAt = file.UploadedAt,
+                FileSize = fileInfo.Exists ? fileInfo.Length : 0,
+                ContentType = GetContentType(file.FileName)
+            };
+        }
+
+        public async Task<List<UploadFileDto>> GetFileByUserIdAsync(int userId)
+        {
+            var files = await _uploadFileRepository.GetByUserAsync(userId);
+            if (files == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} does not exist.");
+            }
+
+            return files.Select(f =>
+            {
+                var fileInfo = new FileInfo(f.FilePath);
+
+                return new UploadFileDto
+                {
+                    FileId = f.FileId,
+                    FileName = f.FileName,
+                    FilePath = f.FilePath,
+                    UploadedBy = f.UploadedBy,
+                    UploadedAt = f.UploadedAt,
+                    FileSize = fileInfo.Exists ? fileInfo.Length : 0,
+                    ContentType = GetContentType(f.FileName)
+                };
+            }).ToList();
+        }
+
+        private static string GetContentType(string fileName)
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xls" => "application/vnd.ms-excel",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
+        }
+
+        public async Task<byte[]?> DownloadFileAsync(int fileId)
+        {
+            var file = await _uploadFileRepository.GetByIdAsync(fileId);
+            if (file == null || !File.Exists(file.FilePath))
+            {
+                return null;
+            }
+
+            return await File.ReadAllBytesAsync(file.FilePath);             // !!!!!!!!!!!!!!!!!!!!!
+        }
+
+        public async Task<bool> DeleteFileAsync(int fileId)
+        {
+            var file = await _uploadFileRepository.GetByIdAsync(fileId);
+            if (file == null)
+            {
+                throw new KeyNotFoundException($"File with ID {fileId} does not exist.");
+            }
+
+            if (File.Exists(file.FilePath))
+            {
+                File.Delete(file.FilePath);
+            }
+
+            return await _uploadFileRepository.DeleteAsync(fileId);
         }
     }
 }
