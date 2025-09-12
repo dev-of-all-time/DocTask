@@ -4,7 +4,10 @@ using DocTask.Core.Interfaces.Services;
 using DocTask.Core.Paginations;
 using Microsoft.AspNetCore.Mvc;
 using TaskModel = DocTask.Core.Models.Task;
-
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using DocTask.Data;
+using DocTask.Core.Exceptions;
 namespace DocTask.Api.Controllers;
 
 [ApiController]
@@ -12,10 +15,12 @@ namespace DocTask.Api.Controllers;
 public class TaskController : ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly ApplicationDbContext _dbContext;
 
-    public TaskController(ITaskService taskService)
+    public TaskController(ITaskService taskService, ApplicationDbContext dbContext)
     {
         _taskService = taskService;
+        _dbContext = dbContext;
     }
 
     // GET: api/v1/task
@@ -81,5 +86,44 @@ public class TaskController : ControllerBase
             Message = "Lấy danh sách task theo người giao thành công",
         });
     }
+    [HttpGet("assigneeid")]
+    public async Task<IActionResult> GetMyTasks()
+    {
+        var username = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized(new ApiResponse<string> { Success = false, Error = "Không thể xác thực người dùng." });
+        }
 
+        var userId = await _dbContext.Users
+            .Where(u => u.Username == username)
+            .Select(u => u.UserId)
+            .FirstOrDefaultAsync();
+
+        if (userId == 0)
+        {
+            throw new NotFoundException("Người dùng không tồn tại.");
+        }
+
+        var tasks = await _dbContext.Tasks
+            .AsNoTracking()
+            .Where(t => t.Users.Any(u => u.UserId == userId))
+            .Select(t => new TaskDto
+            {
+                
+                Title = t.Title,
+                Description = t.Description,
+                
+                StartDate = t.StartDate,
+                DueDate = t.DueDate,
+                
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<List<TaskDto>>
+        {
+            Data = tasks,
+            Message = "Lấy danh sách công việc theo người dùng thành công."
+        });
+    }
 }
