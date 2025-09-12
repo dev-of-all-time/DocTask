@@ -18,7 +18,7 @@ public class TaskController : ControllerBase
         _taskService = taskService;
     }
 
-    // GET: api/tasks
+    // GET: api/v1/task
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PageOptionsRequest pageOptions)
     {
@@ -26,110 +26,47 @@ public class TaskController : ControllerBase
         return Ok(new ApiResponse<PaginatedList<TaskDto>>
         {
             Data = tasks,
-            Message = "Get All Tasks Successfully",
+            Message = "Get all tasks successfully."
         });
     }
-    // GET: api/tasks/{taskId}
-    [HttpGet("{taskId}")]
-    public async Task<IActionResult> GetSubtasks(int taskId, [FromQuery] PageOptionsRequest pageOptions, string? search = null)
-    {
-        try
-        {
-            var subtasks = await _taskService.GetSubtasksAsync(taskId, pageOptions, search);
 
-            var response = new ApiResponse<PaginatedList<TaskDto>>
-            {
-                Success = true,
-                Data = subtasks,
-                Message = "Lấy danh sách task con thành công."
-            };
-
-            return Ok(response);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new ApiResponse<string>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResponse<string>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
-    }
-    // POST: api/tasks
+    // POST: api/v1/task
     [HttpPost]
     public async Task<IActionResult> CreateTask([FromBody] TaskDto taskDto)
     {
-        try
+        
+        var createdTask = await _taskService.CreateTaskAsync(taskDto);
+        return Ok(new ApiResponse<TaskModel>
         {
-            var createdTask = await _taskService.CreateTaskAsync(taskDto);
-            var response = new ApiResponse<TaskModel>
-            {
-                Success = true,
-                Data = createdTask,
-                Message = "Tạo task thành công."
-            };
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResponse<string>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
+            Success = true,
+            Data = createdTask,
+            Message = "Tạo task thành công."
+        });
     }
-    // PUT: api/tasks/{taskId}: xem chi tiết công việc cha - hiển thị danh sách công việc con
+
+    // PUT: api/v1/task/{taskId}
     [HttpPut("{taskId}")]
     public async Task<IActionResult> UpdateTask(int taskId, [FromBody] TaskDto taskDto)
     {
-        try
+        var updatedTask = await _taskService.UpdateTaskAsync(taskId, taskDto);
+        return Ok(new ApiResponse<TaskModel>
         {
-            var updatedTask = await _taskService.UpdateTaskAsync(taskId, taskDto);
-            if (updatedTask == null)
-            {
-                return NotFound(new ApiResponse<string>
-                {
-                    Success = false,
-                    Error = "Task not found"
-                });
-            }
-
-            var response = new ApiResponse<TaskModel>
-            {
-                Success = true,
-                Data = updatedTask,
-                Message = "Cập nhật task thành công."
-            };
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResponse<string>
-            {
-                Success = false,
-                Error = ex.Message
-            });
-        }
+            Success = true,
+            Data = updatedTask,
+            Message = "Cập nhật task thành công."
+        });
     }
 
-    // DELETE: api/tasks/{taskId}
+    // DELETE: api/v1/task/{taskId}
     [HttpDelete("{taskId}")]
     public async Task<IActionResult> DeleteTask(int taskId)
     {
-        var (success, message) = await _taskService.DeleteTaskAsync(taskId);
-
-        if (!success)
-            return BadRequest(new { message });
-
-        return NoContent();
+        await _taskService.DeleteTaskAsync(taskId);
+        return Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Data = null,
+            Message = "Xóa task thành công."
+        });
     }
 }
