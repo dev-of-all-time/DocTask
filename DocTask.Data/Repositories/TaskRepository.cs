@@ -33,8 +33,8 @@ public class TaskRepository : ITaskRepository
     {
       Title = taskDto.Title,
       Description = taskDto.Description,
-      StartDate = taskDto.StartDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
-      DueDate = taskDto.DueDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
+      StartDate = taskDto.StartDate ?? DateTime.UtcNow,
+      DueDate = taskDto.DueDate ?? DateTime.UtcNow.AddDays(1),
     };
     _context.Tasks.Add(newTask);
     await _context.SaveChangesAsync();
