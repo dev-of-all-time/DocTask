@@ -1,6 +1,7 @@
 using DockTask.Api.Configurations;
 using DockTask.Api.Handlers;
 using DocTask.Data;
+using DocTask.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +39,17 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 }
 
 var app = builder.Build();
+//debug test
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+//     var task32 = await context.Tasks.FirstOrDefaultAsync(t => t.TaskId == 32);
+//     if (task32 != null)
+//         Console.WriteLine($"Found task 32: {task32.Title}");
+//     else
+//         Console.WriteLine("Task 32 not found");
+// }
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
