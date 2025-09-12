@@ -18,7 +18,7 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
     }
 
-    public async Task<User> UpdateRefreshToken(User user, string refreshToken)
+    public async Task<User> UpdateRefreshToken(User user, string? refreshToken)
     {
         user.Refreshtoken = refreshToken;
         _context.Update(user);

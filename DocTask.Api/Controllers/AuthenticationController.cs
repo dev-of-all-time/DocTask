@@ -29,5 +29,26 @@ public class AuthenticationController : ControllerBase
             Message = "Login success"
         });
     }
-    
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromHeader] string accessToken, [FromHeader] string refreshToken)
+    {
+        await _authenticationService.Logout(accessToken, refreshToken);
+
+        return Ok(new ApiResponse<object>
+        {
+            Message = "Logout success"
+        });
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromHeader] string refreshToken)
+    {
+        var result = await _authenticationService.RefreshToken(refreshToken);
+        return Ok(new ApiResponse<RefreshResponseDto>
+        {
+            Data = result,
+            Message = "Refresh token success"
+        });
+    }
 }

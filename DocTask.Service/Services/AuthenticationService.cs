@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using DocTask.Core.Dtos.Authentications;
 using DocTask.Core.Exceptions;
 using DocTask.Core.Interfaces.Repositories;
@@ -32,5 +33,32 @@ public class AuthenticationService : IAuthenticationService
             AccessToken = _jwtService.GenerateAccessToken(foundUser),
             RefreshToken =  updatedUser.Refreshtoken
         };
+    }
+
+    public async Task Logout(string accessToken, string refreshToken)
+    {
+        var jwtToken = (JwtSecurityToken)_jwtService.ValidateAccessToken(accessToken);
+        _jwtService.ValidateRefreshToken(refreshToken);
+        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value;
+        var user = await _userRepository.GetByUserNameAsync(username);
+        if (user?.Refreshtoken == null || !user.Refreshtoken.Equals(refreshToken))
+            throw new UnauthorizedException("Invalid token");
+        await _userRepository.UpdateRefreshToken(user, null);
+    }
+
+    public async Task<RefreshResponseDto> RefreshToken(string refreshToken)
+    {
+        var jwtToken = (JwtSecurityToken)_jwtService.ValidateRefreshToken(refreshToken);
+        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value;
+        var user = await _userRepository.GetByUserNameAsync(username);
+        if (user?.Refreshtoken == null || !user.Refreshtoken.Equals(refreshToken))
+            throw new UnauthorizedException("Invalid token");
+        
+        var newAccessToken = _jwtService.GenerateAccessToken(user);
+        var newRefreshToken = _jwtService.GenerateRefreshToken(user);
+        
+        var updatedUser = await _userRepository.UpdateRefreshToken(user, newRefreshToken);
+        
+        return new RefreshResponseDto(newAccessToken, updatedUser.Refreshtoken);
     }
 }

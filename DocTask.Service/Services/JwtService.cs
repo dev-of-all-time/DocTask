@@ -51,12 +51,7 @@ public class JwtService : IJwtService
         return ValidateToken(_jwtSetting.RefreshSecretKey, token);
     }
 
-    public string GenerateRefreshToken(User user, string secretKey, DateTime expiration)
-    {
-        throw new NotImplementedException();
-    }
-
-    public string GenerateToken(User user, string secretKey, double expiration)
+    private string GenerateToken(User user, string secretKey, double expiration)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(secretKey);
@@ -74,10 +69,9 @@ public class JwtService : IJwtService
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
-    
-    
 
-    public SecurityToken ValidateToken(string secretKey, string token)
+
+    private SecurityToken ValidateToken(string secretKey, string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(secretKey);
