@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocTask.Api.Controllers;
@@ -11,29 +10,29 @@ namespace DocTask.Api.Controllers;
 public class TestController : ControllerBase
 {
     [HttpGet("/admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Admin")]
     public IActionResult Test()
     {
         var userName = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         // return "Admin " + userName;
-        return Ok("Admin" + userName);
+        return Ok("Admin: " + userName);
     }
     
     [HttpGet("/manager")]
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = "Manager")]
     public IActionResult Manager()
     {
         var userName = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         // return "Admin " + userName;
-        return Ok("Manager" + userName);
+        return Ok("Manager: " + userName);
     }
     
     [HttpGet("/staff")]
-    [Authorize(Roles = "Staff")]
+    [Authorize(Policy = "Staff")]
     public IActionResult Staff()
     {
         var userName = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         // return "Admin " + userName;
-        return Ok("Staff" + userName);
+        return Ok("Staff: " + userName);
     }
 }

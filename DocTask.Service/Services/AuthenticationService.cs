@@ -2,6 +2,7 @@ using DocTask.Core.Dtos.Authentications;
 using DocTask.Core.Exceptions;
 using DocTask.Core.Interfaces.Repositories;
 using DocTask.Core.Interfaces.Services;
+using DocTask.Data.Repositories;
 
 namespace DocTask.Service.Services;
 

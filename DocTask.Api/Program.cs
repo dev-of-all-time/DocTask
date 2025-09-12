@@ -2,7 +2,6 @@ using System.Text;
 using DockTask.Api.Configurations;
 using DockTask.Api.Handlers;
 using DocTask.Data;
-using DocTask.Data.Repositories;
 using DocTask.Service.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -41,8 +40,8 @@ builder.Services.AddAuthentication("JwtAuth")  // Set default scheme
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("Manager", policy => policy.RequireRole("Manager"));
-    options.AddPolicy("Staff", policy => policy.RequireRole("Staff"));
+    options.AddPolicy("Manager", policy => policy.RequireRole("Admin","Manager"));
+    options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Manager", "Staff"));
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();

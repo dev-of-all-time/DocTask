@@ -1,6 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using DocTask.Core.DTOs.ApiResponses;
+using DocTask.Core.Exceptions;
+using DocTask.Core.Interfaces.Repositories;
 using DocTask.Core.Interfaces.Services;
+using DocTask.Data;
 
 namespace DockTask.Api.Handlers;
 
@@ -15,7 +19,7 @@ public class AuthenticationHandler
         _jwtService = jwtService;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
     {
         var skipPaths = new[] { "/api/v1/auth"};
         
@@ -24,33 +28,45 @@ public class AuthenticationHandler
             await _next(context);
             return;
         }
-        
-        
-        // Kiểm tra header Authorization
-        if (!context.Request.Headers.ContainsKey("Authorization"))
+
+        try
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("Missing Authorization Header");
-            return;
-        }
+            // Kiểm tra header Authorization
+            if (!context.Request.Headers.ContainsKey("Authorization"))
+                throw new UnauthorizedException("Missing Authorization Header");
 
-        var authHeader = context.Request.Headers["Authorization"].ToString();
-        if (!authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            if (!authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                throw new UnauthorizedException("Invalid Authorization Header");
+
+            var token = authHeader["Bearer ".Length..].Trim();
+
+            var jwtToken = (JwtSecurityToken)_jwtService.ValidateAccessToken(token);
+
+            var username = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value;
+            var foundUser = await userRepository.GetByUserNameAsync(username);
+            if (foundUser?.Refreshtoken == null)
+                throw new UnauthorizedException("Invalid token");
+
+            var identity = new ClaimsIdentity(jwtToken.Claims, "JwtAuth");
+            var principal = new ClaimsPrincipal(identity);
+            context.User = principal;
+
+            await _next(context);
+        }
+        catch (Exception ex)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("Invalid Authorization Header");
-            return;
+            if (ex is BaseException baseException)
+                context.Response.StatusCode = baseException.StatusCode;
+            else
+                context.Response.StatusCode = 500;
+            
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Error = ex.Message,
+            });
         }
-
-        var token = authHeader["Bearer ".Length..].Trim();
-
-        var jwtToken = (JwtSecurityToken) _jwtService.ValidateAccessToken(token);
-        
-        var identity = new ClaimsIdentity(jwtToken.Claims, "JwtAuth");
-        var principal = new ClaimsPrincipal(identity);
-        context.User = principal;
-
-        await _next(context);
     }
 }
 
